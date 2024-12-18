@@ -1,0 +1,34 @@
+#!/bin/sh
+
+indent() {
+    sed -u 's/^/       /'
+}
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+ENV_DIR=$3
+
+
+APP_ROOT_DIR=$(cat "${ENV_DIR}/APP_ROOT_DIR")
+
+if [ -z "${APP_ROOT_DIR}" ]; then
+    echo "APP_ROOT_DIR config var was not set. Aborting" | indent
+    exit 1
+fi
+
+# remove all files and directories except for the APP_ROOT_DIR
+find . ! -name "${APP_ROOT_DIR}" -type f -exec rm -f {} +
+find . ! -name "${APP_ROOT_DIR}" -type d -exec rm -rf {} +
+
+# copy the APP_ROOT_DIR to the root of the build directory
+cp -r "${BUILD_DIR}/${APP_ROOT_DIR}/." "${BUILD_DIR}/"
+
+# remove the APP_ROOT_DIR
+rm -rf "${BUILD_DIR}/${APP_ROOT_DIR}"
+
+if ! [ $? ]; then
+    echo "FAILED to copy contents of ${APP_ROOT_DIR} to ${BUILD_DIR}" | indent
+    exit 1
+fi
+
+echo "Copied contents of ${APP_ROOT_DIR} to ${BUILD_DIR} successfully." | indent
